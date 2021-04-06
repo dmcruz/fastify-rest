@@ -3,7 +3,7 @@
 const { bicycle } = require('../../model')
 
 module.exports = async(fastify, opts) => {
-  fastify.get('/:id', (request, reply) => {
+  fastify.get('/:id', async (request, reply) => {
     const { id } = request.params
 
     bicycle.read(id, (err, result) => {
@@ -15,5 +15,6 @@ module.exports = async(fastify, opts) => {
         reply.send(result)
       }
     })
+    await reply
   })
 }
