@@ -10,7 +10,41 @@ const update = promisify(bicycle.update)
 module.exports = async(fastify, opts) => {
   const { notFound } = fastify.httpErrors
 
-  fastify.get('/:id', async (request, reply) => {
+  const bodySchema ={
+    type: 'object',
+    required: ['data'],
+    additionalProperties: false,
+    properties: {
+      data: {
+        type: 'object',
+        required: ['brand', 'color'],
+        additionalProperties: false,
+        properties: {
+          brand: {type: 'string'},
+          color: {type: 'string'}
+        }
+      }
+    }
+  }
+  const paramsSchema = {
+    id: {
+      type: 'integer'
+    }
+  }
+
+  const idSchema = { type: 'integer'}
+
+  const dataSchema = {
+    type: 'object',
+    required: ['brand', 'color'],
+    additionalProperties: false,
+    properties: {
+      brand: { type: 'string' },
+      color: { type: 'string' }
+    }
+  }
+  
+  fastify.get('/:id', { schema: { params: paramsSchema }, response: { 200: dataSchema } }, async (request, reply) => {
     const { id } = request.params
 
     try {
@@ -21,14 +55,21 @@ module.exports = async(fastify, opts) => {
     }
   })
 
-  fastify.post('/', async(request, reply) => {
+  fastify.post('/', {
+      schema: {
+        body: bodySchema,
+        response: { 
+          201: { id: idSchema }
+        }
+      }
+    }, async(request, reply) => {
     const { data } = request.body
     const id = uid()
     await create(id, data)
     reply.code(201)
     return { id }
   })
-  fastify.post('/:id/update', async(request, reply) => {
+  fastify.post('/:id/update', { schema: { body: bodySchema } }, async(request, reply) => {
     const { id } = request.params
     const { data } = request.body
     try {
@@ -40,7 +81,7 @@ module.exports = async(fastify, opts) => {
     }
   })
 
-  fastify.put('/:id', async(request, reply) => {
+  fastify.put('/:id', { schema: { body: bodySchema, params: paramsSchema } }, async(request, reply) => {
     const { id } = request.params
     const { data } = request.body
     try {
